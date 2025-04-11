@@ -1,0 +1,6 @@
+com\mycompany\employee_management_w4\JakartaRestConfiguration.class
+com\example\service\EmployeeService.class
+com\mycompany\employee_management_w4\resources\JakartaEE10Resource.class
+com\example\model\EmployeeDetails.class
+Employee\java.class
+com\example\controller\EmployeeServlet.class

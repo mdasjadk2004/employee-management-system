@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management</title>
+    <script>
+        async function fetchEmployees() {
+            let response = await fetch("EmployeeServlet");
+            let data = await response.json();
+            let tableBody = document.getElementById("employeeTableBody");
+
+            tableBody.innerHTML = "";
+            data.forEach(emp => {
+                let row = `<tr>
+                    <td>${emp.id}</td>
+                    <td>${emp.employeeId}</td>
+                    <td>${emp.salary}</td>
+                    <td>${emp.address}</td>
+                    <td><button onclick="deleteEmployee(${emp.id})">Delete</button></td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        async function addEmployee(event) {
+            event.preventDefault();
+            let name = document.getElementById("name").value;
+            let salary = document.getElementById("salary").value;
+            let address = document.getElementById("address").value;
+
+            let formData = new URLSearchParams();
+            formData.append("name", name);
+            formData.append("salary", salary);
+            formData.append("address", address);
+
+            let response = await fetch("EmployeeServlet", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData
+            });
+
+            let result = await response.text();
+            alert(result);
+            document.getElementById("addEmployeeForm").reset();
+            fetchEmployees();
+        }
+
+        async function deleteEmployee(id) {
+            let response = await fetch("EmployeeServlet?id=" + id, {
+                method: "DELETE"
+            });
+
+            let result = await response.text();
+            alert(result);
+            fetchEmployees();
+        }
+
+        async function handleDelete(event) {
+            event.preventDefault();
+            let id = document.getElementById("deleteId").value;
+            if (id) {
+                deleteEmployee(id);
+            } else {
+                alert("Please enter an Employee ID.");
+            }
+        }
+
+        window.onload = fetchEmployees;
+    </script>
+</head>
+<body>
+    <h2>Employee Management System</h2>
+
+    <h3>Add Employee</h3>
+    <form id="addEmployeeForm" onsubmit="addEmployee(event)">
+        <label>Name:</label>
+        <input type="text" id="name" required>
+        <label>Salary:</label>
+        <input type="number" id="salary" required>
+        <label>Address:</label>
+        <input type="text" id="address" required>
+        <button type="submit">Add Employee</button>
+    </form>
+
+    <h3>Delete Employee</h3>
+    <form onsubmit="handleDelete(event)">
+        <label>Enter Employee ID:</label>
+        <input type="number" id="deleteId" required>
+        <button type="submit">Delete Employee</button>
+    </form>
+
+    <h3>Employee List</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Employee ID</th>
+                <th>Salary</th>
+                <th>Address</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="employeeTableBody"></tbody>
+    </table>
+</body>
+</html>

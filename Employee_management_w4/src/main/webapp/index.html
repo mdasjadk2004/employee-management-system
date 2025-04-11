@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management</title>
+      <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #e0f7fa, #f1f8e9);
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        h3 {
+            color: #34495e;
+            margin-top: 40px;
+        }
+
+        form {
+            background: #ffffff;
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 20px auto;
+            transition: 0.3s ease-in-out;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            margin-top: 6px;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            margin-top: 20px;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            transform: scale(1.03);
+        }
+
+        table {
+            width: 90%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+
+        td button {
+            background-color: #e74c3c;
+            border-radius: 6px;
+            padding: 6px 12px;
+        }
+
+        td button:hover {
+            background-color: #c0392b;
+        }
+
+        @media (max-width: 600px) {
+            form, table {
+                width: 100%;
+                font-size: 14px;
+            }
+
+            table {
+                margin: 0;
+            }
+        }
+    </style>
+    <script>
+        async function fetchEmployees() {
+            let response = await fetch("EmployeeServlet");
+            let data = await response.json();
+            let tableBody = document.getElementById("employeeTableBody");
+
+            tableBody.innerHTML = "";
+            data.forEach(emp => {
+                let row = `<tr>
+                    <td>${emp.employeeId}</td>
+                    <td>${emp.Name}</td>
+                    <td>${emp.salary}</td>
+                    <td>${emp.address}</td>
+                    <td><button onclick="deleteEmployee(${emp.employeeId})">Delete</button></td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        async function addEmployee(event) {
+            event.preventDefault();
+            let name = document.getElementById("name").value;
+            let salary = document.getElementById("salary").value;
+            let address = document.getElementById("address").value;
+
+            let formData = new URLSearchParams();
+            formData.append("name", name);
+            formData.append("salary", salary);
+            formData.append("address", address);
+
+            let response = await fetch("EmployeeServlet", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData
+            });
+
+            let result = await response.text();
+            alert(result);
+            document.getElementById("addEmployeeForm").reset();
+            fetchEmployees();
+        }
+
+        async function deleteEmployee(id) {
+            let response = await fetch("EmployeeServlet?id=" + id, {
+                method: "DELETE"
+            });
+
+            let result = await response.text();
+            alert(result);
+            fetchEmployees();
+        }
+
+        async function handleDelete(event) {
+            event.preventDefault();
+            let id = document.getElementById("deleteId").value;
+            if (id) {
+                deleteEmployee(id);
+            } else {
+                alert("Please enter an Employee ID.");
+            }
+        }
+        async function updateEmployee(event) {
+            event.preventDefault();
+            let id = document.getElementById("updateId").value;
+            let name = document.getElementById("updateName").value;
+            let salary = document.getElementById("updateSalary").value;
+            let address = document.getElementById("updateAddress").value;
+
+            let formData = new URLSearchParams();
+            formData.append("action", "update"); // 👈 important
+            formData.append("id", id);
+            formData.append("name", name);
+            formData.append("salary", salary);
+            formData.append("address", address);
+
+            let response = await fetch("EmployeeServlet", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData
+            });
+
+            let result = await response.text();
+            alert(result);
+            fetchEmployees(); // refresh table
+        }
+
+
+        window.onload = fetchEmployees;
+    </script>
+</head>
+<body>
+    <h2>Employee Management System</h2>
+
+    <h3>Add Employee</h3>
+    <form id="addEmployeeForm" onsubmit="addEmployee(event)">
+        <label>Name:</label>
+        <input type="text" id="name" required>
+        <label>Salary:</label>
+        <input type="number" id="salary" required>
+        <label>Address:</label>
+        <input type="text" id="address" required>
+        <button type="submit">Add Employee</button>
+    </form>
+
+    <h3>Delete Employee</h3>
+    <form onsubmit="handleDelete(event)">
+        <label>Enter Employee ID:</label>
+        <input type="number" id="deleteId" required>
+        <button type="submit">Delete Employee</button>
+    </form>
+<!-- update function -->
+<h3>Update Employee</h3>
+<form onsubmit="updateEmployee(event)">
+    <label>Enter Employee ID:</label>
+    <input type="text" id="updateId" required>
+
+	<label>Employee Name:</label>
+    <input type="text" id="updateName" required>
+    
+    <label>New Salary:</label>
+    <input type="text" id="updateSalary" required>
+
+    <label>New Address:</label>
+    <input type="text" id="updateAddress" required>
+
+    <button type="submit">Update Employee</button>
+</form>
+
+    <h3>Employee List</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+        		<th>Name</th>
+                <th>Salary</th>
+                <th>Address</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="employeeTableBody"></tbody>
+    </table>
+</body>
+</html>
